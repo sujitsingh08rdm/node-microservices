@@ -1,4 +1,4 @@
-version: "3.8"
+# version: "3.8"
 
 services:
   api-gateway:
@@ -8,7 +8,7 @@ services:
     env_file: ./api-gateway/.env
     depends_on:
       - redis
-      - rebbitmq
+      - rabbitmq
     environment:
       - REDIS_URL=redis://redis:6379
       - RABBITMQ_URL=amqp://rabbitmq:5672
@@ -17,7 +17,7 @@ services:
     env_file: ./identity-service/.env
     depends_on:
       - redis
-      - rebbitmq
+      - rabbitmq
     environment:
       - REDIS_URL=redis://redis:6379
       - RABBITMQ_URL=amqp://rabbitmq:5672
@@ -26,7 +26,7 @@ services:
     env_file: ./post-service/.env
     depends_on:
       - redis
-      - rebbitmq
+      - rabbitmq
     environment:
       - REDIS_URL=redis://redis:6379
       - RABBITMQ_URL=amqp://rabbitmq:5672
@@ -36,7 +36,7 @@ services:
     env_file: ./media-service/.env
     depends_on:
       - redis
-      - rebbitmq
+      - rabbitmq
     environment:
       - REDIS_URL=redis://redis:6379
       - RABBITMQ_URL=amqp://rabbitmq:5672
@@ -45,7 +45,7 @@ services:
     env_file: ./search-service/.env
     depends_on:
       - redis
-      - rebbitmq
+      - rabbitmq
     environment:
       - REDIS_URL=redis://redis:6379
       - RABBITMQ_URL=amqp://rabbitmq:5672
