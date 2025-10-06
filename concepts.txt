@@ -1,0 +1,55 @@
+Microservices architecture is a software development approach where an application is built as a collection of small, independent, loosely coupled services. Each service is designed around a specific business capability, can be developed and deployed independently, and communicates with other services typically via APIs (e.g., REST, gRPC, or messaging systems).
+
+key characteristics of microservices 
+1. independence : Each services run on its own process and can be deployed without affecting others 
+2. business capability oriented : services map closely to bussiness functions (e.x payment , user management, order service).
+3. decentralised data management : each service has it own database to avoid tight coupling.
+4. communication : services communicates through lightweight protocols like HTTP/REST, gRPC, or event driven messaging (kafka, RabbitMQ)
+5. Scalability : indivisual services can be scaled independently based on demand. 
+6. fault tolerence : if one services fail the entire system does'nt neccesary fails.
+7. Technology Agnostic : Teams can use different programming languages, databases, or frameworks for each service.
+
+
+flow. 
+1. basic skeleton of API Gateway
+2. Auth service (user/auth specific services) -> 
+    2a. in ENV file added port , mongo_url and jwt secret, created user modal schema with username, email, password, and createdAt. In this model. create a pre method to check if pass is new or check if it matches then hash it. then compare password, and export the model.
+    2b. create a logger js using winston. create a error handler middleware and a fresh token Model Schema. Then work on controllers. FIrst lets create register user controller, before that create a validateREgistration util using JOI.then a generateToken util for both access and refresh token.THen add router for UserRegistration.
+    2c. create servers.js to DB Connection, use middleawres and rate limiting. Routing and starting the server. its working. 
+3. API Gateway ->
+    3a. create a proxy for identity services , and run the API Gateway Sever, and run identity service, able to register using proxy.
+4. Auth/identity service -> 
+    4a. Login controllers , first log info that login url is hit, then get the user and pass from req body then check if userEMail is matching with user collection, if not log it and return , then check for password, if all ok then generateToken and send it as response.
+    4b. RefreshToken endpoint, first get the refreshTOken from body, check if its present or not, if presetn use it to find the refreshTOken stored in our DB, if not present or expired then log error, then get userdetails from sTored Token , if user not present , then log user not found. with the user generate new token and delte the old onces, then send the new refreshTOken and acessTOken . and export it
+    4c. logout controller endpoint,  firt get the refreshTOken from body then, if refreshToken not present log it, if present then delete it from RefreshToken DB. send res as logged out
+    4e. add both controller to the router.
+5.  Post service. ->
+    5a. create folder structure , create logger in utils. create a post-controller, in post controller it should have method to create a post first(it should have user,content,mediaIds) export it then create a ri=oute for it, then a middleware for authenticate. and use it in our rooutes. nOw lets work with server.js
+    5b. ConnectDB , use logger, Use the middlewares, create a sensitive Rate limit, then router.
+    now set up router for our post services.then listen to post service PORT. then also create a middleware for valdiateToken and use it then add proxy to post. then valdiate this using postman. add schema validation usng JOI for post.
+    5c. Now work on getAllPost get page limit from query fro paginations , and create a cache key and value, if cache value there then returnr es with value, then fidn the post and save it in result then cache it using redis, then pass return it as res. its working,. after this we witll create a method invalidatePostCache. so that we can invalidate it after we add a new post to main consistancy.
+    5d. now start working on getPost, and create a cache for a single post, then work on delte and invalidate the cache after delete make sure to delte both cache single and other one also. lets then work on media services
+   
+6. Media service -> 
+    6a. install all neccesary packages, just do whatever is there in post service, then additionally install cloudinary multer . now use logger , then auth and error handler middleware. now lets start working on media model.
+    6b. first upload to cloudinary then get data back that we will store in DB. then publish a media uploaded event. for now lets create some utils methods. first cloudinary utils function tohandle upload file to cloudinary. then let work on media-controller. then media routes
+    6c. in routes create a multer middleware for upload and then uploadMedia fn in the route.
+    then start work on server. its should run now set up proxy for media in api server. able to post media. then also validate using joi.
+    Now lets say if we want to delte the post then the image should also need to be deleted from DB as well as cloudinary. so lets seee how to achieve that.
+    for this we needs to install rabbitMQ, amqp, and erlangOTP. then add amqp server in .env file. then create the rabbitMQ util for conecction. now startServer in server.js with connectTORabbit showing up.
+    6d. Then work on delete from Cloudinary method. and now create getAllMedia in controllers. THen lets move to publish event from rabbit mq. copy rabbitMQ util to medis service also. THen we have to create a method to consume the event in our media services and exprot it
+    6e. come to server.js. copy that startServer from post service. add method for consume  , and now create a eventHandler for deleting the post. and use this deleteEvent on consumeEvent of media service. delete is workng as expected.
+7. Search Service -> 
+    7a. Create a model for Search, copy basic utils and do the boilderplate code form post sevices. now have to create route and controllers. then merge the route to server js. Now we with empty collection, so to help this we have to pusblish a event when user createa post. so that we can consume it on searchRoute so that able to save it to DB. goto post controller and on create post add a publishEvent for createPsost.
+    7b. Go back to search create startServer then startREbbitMQ and then consume event for create a add handler. handler to be created next day  
+    7c. created eventhandler for submit, now we have to proxy for searchServices in our api gateway.and start server and its working we are not getting same posts in both search and post service DB. now we have to work on delete post so taht we will also able to delete in search collection. now create a event handler for delete and pass it in our start server of search service. bow able to delete it in both post and search services. also search is working.
+
+8.  Deployment -> first create a git init, and then pas in dockerfile, then create a github repo.
+
+
+
+                                    ******************    
+                                    *******Todo*******    
+                                    ******************
+
+//Implement Redis caching here in search   
